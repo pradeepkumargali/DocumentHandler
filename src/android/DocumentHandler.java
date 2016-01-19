@@ -31,12 +31,14 @@ public class DocumentHandler extends CordovaPlugin {
 		if (HANDLE_DOCUMENT_ACTION.equals(action)) {
 
 			// parse arguments
-			final JSONObject arg_object = args.getJSONObject(0);
-			final String url = arg_object.getString("url");
+			final JSONObject arg_object0 = args.getJSONObject(0);
+			final String url = arg_object0.getString("url");
+			final JSONObject arg_object1 = args.getJSONObject(1);
+			final String fileName = arg_object1.getString("fileName");
 			System.out.println("Found: " + url);
 
 			// start async download task
-			new FileDownloaderAsyncTask(callbackContext, url).execute();
+			new FileDownloaderAsyncTask(callbackContext, url,fileName).execute();
 
 			return true;
 		}
@@ -52,7 +54,7 @@ public class DocumentHandler extends CordovaPlugin {
 	 * @param url
 	 * @return
 	 */
-	private File downloadFile(String url, CallbackContext callbackContext) {
+	private File downloadFile(String url, CallbackContext callbackContext, String fileName) {
 
 		try {
 			// get an instance of a cookie manager since it has access to our
@@ -73,9 +75,9 @@ public class DocumentHandler extends CordovaPlugin {
 
 			InputStream reader = conn.getInputStream();
 
-			String extension = MimeTypeMap.getFileExtensionFromUrl(url);
-			File f = File.createTempFile(FILE_PREFIX, "." + extension,
-					null);
+			String extension = MimeTypeMap.getFileExtensionFromUrl(fileName);
+			//String extension = "doc";
+			File f = File.createTempFile(FILE_PREFIX,"."+extension,null);
 			// make sure the receiving app can read this file
 			f.setReadable(true, false);
 			FileOutputStream outStream = new FileOutputStream(f);
@@ -108,10 +110,11 @@ public class DocumentHandler extends CordovaPlugin {
 	 * @param url
 	 * @return
 	 */
-	private static String getMimeType(String url) {
+	private static String getMimeType(String fileName) {
 		String mimeType = null;
 
-		String extension = MimeTypeMap.getFileExtensionFromUrl(url);
+		String extension = MimeTypeMap.getFileExtensionFromUrl(fileName);
+		//String extension = "doc";
 		if (extension != null) {
 			MimeTypeMap mime = MimeTypeMap.getSingleton();
 			mimeType = mime.getMimeTypeFromExtension(extension);
@@ -126,17 +129,18 @@ public class DocumentHandler extends CordovaPlugin {
 
 		private final CallbackContext callbackContext;
 		private final String url;
+		private final String fileName;
 
-		public FileDownloaderAsyncTask(CallbackContext callbackContext,
-																	 String url) {
+		public FileDownloaderAsyncTask(CallbackContext callbackContext,String url,String fileName) {
 			super();
 			this.callbackContext = callbackContext;
 			this.url = url;
+			this.fileName = fileName;
 		}
 
 		@Override
 		protected File doInBackground(Void... arg0) {
-			return downloadFile(url, callbackContext);
+			return downloadFile(url, callbackContext, fileName);
 		}
 
 		@Override
@@ -149,7 +153,7 @@ public class DocumentHandler extends CordovaPlugin {
 			Context context = cordova.getActivity().getApplicationContext();
 
 			// get mime type of file data
-			String mimeType = getMimeType(url);
+			String mimeType = getMimeType(fileName);
 			if (mimeType == null) {
 				callbackContext.error(ERROR_UNKNOWN_ERROR);
 				return;
