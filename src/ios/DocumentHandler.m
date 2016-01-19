@@ -13,6 +13,7 @@
         NSDictionary* dict = [command.arguments objectAtIndex:0];
         
         NSString* urlStr = dict[@"url"];
+        NSString* fileName = dict[@"fileName"];
         NSURL* url = [NSURL URLWithString:urlStr];
         NSData* dat = [NSData dataWithContentsOfURL:url];
         if (dat == nil) {
@@ -21,7 +22,10 @@
           return;
         }
 
-        NSString* fileName = [url lastPathComponent];
+        //NSString* fileName = [url lastPathComponent];
+        if (!fileName) {
+            fileName = [url lastPathComponent];
+        }
         NSString* path = [NSTemporaryDirectory() stringByAppendingPathComponent: fileName];
         NSURL* tmpFileUrl = [[NSURL alloc] initFileURLWithPath:path];
         [dat writeToURL:tmpFileUrl atomically:YES];
